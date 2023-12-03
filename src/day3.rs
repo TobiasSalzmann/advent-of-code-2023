@@ -1,9 +1,9 @@
+use crate::util;
+use crate::util::{day, AdventHelper, Point};
+use itertools::Itertools;
+use regex::Regex;
 use std::collections::HashMap;
 use std::str::FromStr;
-use crate::util;
-use itertools::{Itertools};
-use regex::Regex;
-use crate::util::{AdventHelper, day, Point};
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -21,7 +21,8 @@ fn sum_part_numbers(parts: &Vec<u32>) -> u32 {
 
 fn sum_gear_ratios(parts: &Vec<Part>) -> u32 {
     let mut count = 0;
-    parts.iter()
+    parts
+        .iter()
         .filter(|p| p.symbol == '*')
         .into_group_map_by(|g| g.position)
         .values()
@@ -68,7 +69,13 @@ fn find_labels(lines: &Vec<String>, symbols: &HashMap<Point, char>) -> (Vec<u32>
     (part_numbers, parts)
 }
 
-fn make_part(number: u32, label_x: i32, label_y: i32, length: usize, symbols: &HashMap<Point, char>) -> Vec<Part> {
+fn make_part(
+    number: u32,
+    label_x: i32,
+    label_y: i32,
+    length: usize,
+    symbols: &HashMap<Point, char>,
+) -> Vec<Part> {
     let mut parts = vec![];
     for y in (label_y - 1)..=(label_y + 1) {
         for x in (label_x - 1)..=(label_x + length as i32) {
@@ -84,8 +91,3 @@ fn make_part(number: u32, label_x: i32, label_y: i32, length: usize, symbols: &H
     }
     parts
 }
-
-
-
-
-

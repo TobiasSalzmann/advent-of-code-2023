@@ -1,24 +1,26 @@
-use std::str::FromStr;
 use crate::util;
-use itertools::{Itertools};
-use crate::util::{AdventHelper, day};
+use crate::util::{day, AdventHelper};
+use itertools::Itertools;
+use std::str::FromStr;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let games: Vec<Game> = advent.parse_from_strings();
 
-    advent.part1("Number of possible games: {}", sum_valid_games(games.clone(), 12, 13, 14));
+    advent.part1(
+        "Number of possible games: {}",
+        sum_valid_games(games.clone(), 12, 13, 14),
+    );
     advent.part2("Minimum Power: {}", sum_minimum_powers(games.clone()));
 }
 
 fn sum_minimum_powers(games: Vec<Game>) -> usize {
-    games.iter()
-        .map(|game| game.minimum_power())
-        .sum()
+    games.iter().map(|game| game.minimum_power()).sum()
 }
 
 fn sum_valid_games(games: Vec<Game>, max_red: usize, max_green: usize, max_blue: usize) -> u32 {
-    games.into_iter()
+    games
+        .into_iter()
         .filter(|game| game.is_valid(max_red, max_green, max_blue))
         .map(|game| game.id)
         .sum()
@@ -39,10 +41,9 @@ struct Game {
 
 impl Game {
     fn is_valid(&self, max_red: usize, max_green: usize, max_blue: usize) -> bool {
-        self.rounds.iter()
-            .all(|round| {
-                max_red >= round.red && max_green >= round.green && max_blue >= round.blue
-            })
+        self.rounds
+            .iter()
+            .all(|round| max_red >= round.red && max_green >= round.green && max_blue >= round.blue)
     }
 
     fn minimum_power(&self) -> usize {
@@ -60,7 +61,8 @@ impl FromStr for Game {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (raw_game, raw_rounds_str) = s.split(": ").collect_tuple().unwrap();
         let id = raw_game.strip_prefix("Game ").unwrap().parse().unwrap();
-        let rounds = raw_rounds_str.split("; ")
+        let rounds = raw_rounds_str
+            .split("; ")
             .map(|raw_round| raw_round.parse().unwrap())
             .collect_vec();
         Ok(Game { id, rounds })
@@ -82,11 +84,10 @@ impl FromStr for Round {
                 "red" => red = num,
                 "green" => green = num,
                 "blue" => blue = num,
-                _ => panic!()
+                _ => panic!(),
             }
         }
 
         Ok(Round { red, green, blue })
     }
 }
-

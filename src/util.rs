@@ -11,11 +11,12 @@ pub fn parse_int_lists(file_path: &str) -> Vec<Vec<i32>> {
         .collect()
 }
 
-pub fn parse_from_strings<T: FromStr>(file_path: &str) -> Vec<T> where <T as FromStr>::Err: Debug {
+pub fn parse_from_strings<T: FromStr>(file_path: &str) -> Vec<T>
+where
+    <T as FromStr>::Err: Debug,
+{
     let contents = fs::read_to_string(file_path).expect("File does not exists");
-    contents.lines()
-        .map(|s| s.parse().unwrap())
-        .collect()
+    contents.lines().map(|s| s.parse().unwrap()).collect()
 }
 
 pub fn parse_strings(file_path: &str) -> Vec<String> {
@@ -24,22 +25,31 @@ pub fn parse_strings(file_path: &str) -> Vec<String> {
 }
 
 pub fn day(file_name: &str) -> &str {
-    file_name.strip_prefix("src/day").unwrap()
-        .strip_suffix(".rs").unwrap()
+    file_name
+        .strip_prefix("src/day")
+        .unwrap()
+        .strip_suffix(".rs")
+        .unwrap()
 }
 
 pub(crate) struct AdventHelper {
     day: u32,
-    suffix: String
+    suffix: String,
 }
 
 impl AdventHelper {
     pub fn from_file_name(file_name: &str) -> Self {
-        Self { day: day(file_name).parse().unwrap(), suffix: "".to_string() }
+        Self {
+            day: day(file_name).parse().unwrap(),
+            suffix: "".to_string(),
+        }
     }
 
     pub fn test(&self) -> Self {
-        Self { day: self.day, suffix: ".test".to_string()}
+        Self {
+            day: self.day,
+            suffix: ".test".to_string(),
+        }
     }
 
     pub fn input_file(&self) -> String {
@@ -59,7 +69,10 @@ impl AdventHelper {
         println!("Day {}, Part {}: {}", self.day, part_num, actual_output)
     }
 
-    pub fn parse_from_strings<T: FromStr>(&self) -> Vec<T> where <T as FromStr>::Err: Debug {
+    pub fn parse_from_strings<T: FromStr>(&self) -> Vec<T>
+    where
+        <T as FromStr>::Err: Debug,
+    {
         parse_from_strings(&self.input_file())
     }
 }
@@ -72,10 +85,12 @@ pub struct Point {
 
 impl Point {
     pub(crate) fn new(x: impl Into<i32>, y: impl Into<i32>) -> Point {
-        Point{x: x.into(), y: y.into()}
+        Point {
+            x: x.into(),
+            y: y.into(),
+        }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
