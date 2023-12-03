@@ -64,6 +64,17 @@ impl AdventHelper {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub struct Point {
+    pub(crate) x: i32,
+    pub(crate) y: i32,
+}
+
+impl Point {
+    pub(crate) fn new(x: impl Into<i32>, y: impl Into<i32>) -> Point {
+        Point{x: x.into(), y: y.into()}
+    }
+}
 
 
 #[cfg(test)]
