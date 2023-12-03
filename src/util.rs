@@ -1,4 +1,6 @@
+use std::fmt::{Debug, Display};
 use std::fs;
+use std::str::FromStr;
 
 pub fn parse_int_lists(file_path: &str) -> Vec<Vec<i32>> {
     let contents = fs::read_to_string(file_path).expect("File does not exists");
@@ -9,14 +11,60 @@ pub fn parse_int_lists(file_path: &str) -> Vec<Vec<i32>> {
         .collect()
 }
 
+pub fn parse_from_strings<T: FromStr>(file_path: &str) -> Vec<T> where <T as FromStr>::Err: Debug {
+    let contents = fs::read_to_string(file_path).expect("File does not exists");
+    contents.lines()
+        .map(|s| s.parse().unwrap())
+        .collect()
+}
+
 pub fn parse_strings(file_path: &str) -> Vec<String> {
     let contents = fs::read_to_string(file_path).expect("File does not exists");
     contents.lines().map(|s| s.to_string()).collect()
 }
 
 pub fn day(file_name: &str) -> &str {
-    file_name.strip_prefix("src/day").unwrap().strip_suffix(".rs").unwrap()
+    file_name.strip_prefix("src/day").unwrap()
+        .strip_suffix(".rs").unwrap()
 }
+
+pub(crate) struct AdventHelper {
+    day: u32,
+    suffix: String
+}
+
+impl AdventHelper {
+    pub fn from_file_name(file_name: &str) -> Self {
+        Self { day: day(file_name).parse().unwrap(), suffix: "".to_string() }
+    }
+
+    pub fn test(&self) -> Self {
+        Self { day: self.day, suffix: ".test".to_string()}
+    }
+
+    pub fn input_file(&self) -> String {
+        format!("resources/day{}{}.txt", self.day, self.suffix)
+    }
+
+    /// Returns the value in seconds.
+    pub fn part1<T: Display>(&self, template: &str, output: T) {
+        self.part(1, template, output)
+    }
+    pub fn part2<T: Display>(&self, template: &str, output: T) {
+        self.part(2, template, output)
+    }
+
+    fn part<T: Display>(&self, part_num: u32, template: &str, output: T) {
+        let actual_output = template.replace("{}", &output.to_string());
+        println!("Day {}, Part {}: {}", self.day, part_num, actual_output)
+    }
+
+    pub fn parse_from_strings<T: FromStr>(&self) -> Vec<T> where <T as FromStr>::Err: Debug {
+        parse_from_strings(&self.input_file())
+    }
+}
+
+
 
 #[cfg(test)]
 mod tests {
