@@ -1,9 +1,9 @@
-use crate::util;
-use crate::util::{day, AdventHelper, Point};
+
+use crate::util::{AdventHelper, Point};
 use itertools::Itertools;
 use regex::Regex;
 use std::collections::HashMap;
-use std::str::FromStr;
+
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -20,7 +20,7 @@ fn sum_part_numbers(parts: &Vec<u32>) -> u32 {
 }
 
 fn sum_gear_ratios(parts: &Vec<Part>) -> u32 {
-    let mut count = 0;
+    let _count = 0;
     parts
         .iter()
         .filter(|p| p.symbol == '*')
