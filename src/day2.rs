@@ -1,5 +1,4 @@
-
-use crate::util::{AdventHelper};
+use crate::util::AdventHelper;
 use itertools::Itertools;
 use std::str::FromStr;
 

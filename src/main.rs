@@ -1,6 +1,7 @@
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 mod util;
 
 extern crate core;
@@ -39,6 +40,7 @@ fn run(day: i32, time: bool) {
         1 => day1::main(),
         2 => day2::main(),
         3 => day3::main(),
+        4 => day4::main(),
         other => {
             println!("Day {} not yet implemented 😅", other)
         }

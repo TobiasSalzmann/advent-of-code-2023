@@ -1,9 +1,7 @@
-
 use crate::util::{AdventHelper, Point};
 use itertools::Itertools;
 use regex::Regex;
 use std::collections::HashMap;
-
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());

@@ -85,7 +85,7 @@ impl Point {
 
 #[cfg(test)]
 mod tests {
-    use crate::util::{parse_strings};
+    use crate::util::parse_strings;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
