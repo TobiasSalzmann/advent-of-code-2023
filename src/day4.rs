@@ -1,7 +1,7 @@
-use crate::util::{AdventHelper};
+use crate::util::AdventHelper;
 use itertools::Itertools;
 
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::str::FromStr;
 
 pub fn main() {
