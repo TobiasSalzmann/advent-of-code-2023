@@ -115,14 +115,10 @@ struct Almanac {
 
 impl Almanac {
     fn seed_ranges(&self) -> Vec<Range<u64>> {
-        self.seeds
-            .iter()
-            .chunks(2)
-            .into_iter()
-            .map(|chunk| {
-                let (start, len) = chunk.cloned().collect_tuple().unwrap();
-                start..(start + len)
-            })
+        self.seeds.iter()
+            .cloned()
+            .tuples()
+            .map(|(a, b)| a..a+b)
             .collect_vec()
     }
 }
