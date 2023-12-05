@@ -133,8 +133,7 @@ fn parse_seed_maps(lines: &Vec<String>) -> Almanac {
     for line in lines {
         if let Some(line) = line.strip_prefix("seeds: ") {
             seeds = line.split(" ").map(|n| n.parse().unwrap()).collect_vec()
-        } else if let Some(line) = line.strip_suffix(" map:") {
-            let (from, to) = line.split("-to-").collect_tuple().unwrap();
+        } else if line.ends_with(" map:") {
             maps.push(AlmanacMap { mappings: vec![] })
         } else if !line.is_empty() {
             let (destination_range_start, source_range_start, range_length) = line
