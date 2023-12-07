@@ -9,8 +9,14 @@ pub fn main() {
     let lines: Vec<String> = advent.parse_from_strings();
     let almanac = parse_seed_maps(&lines);
 
-    advent.part1("Lowest location number: {}", lowest_location_number(&almanac));
-    advent.part2("Lowest location number: {}", lowest_location_range_number(&almanac));
+    advent.part1(
+        "Lowest location number: {}",
+        lowest_location_number(&almanac),
+    );
+    advent.part2(
+        "Lowest location number: {}",
+        lowest_location_range_number(&almanac),
+    );
 }
 
 fn lowest_location_number(almanac: &Almanac) -> u64 {
@@ -115,10 +121,11 @@ struct Almanac {
 
 impl Almanac {
     fn seed_ranges(&self) -> Vec<Range<u64>> {
-        self.seeds.iter()
+        self.seeds
+            .iter()
             .cloned()
             .tuples()
-            .map(|(a, b)| a..a+b)
+            .map(|(a, b)| a..a + b)
             .collect_vec()
     }
 }
