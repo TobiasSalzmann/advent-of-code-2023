@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fmt::{Debug, Display};
 use std::fs;
 use std::str::FromStr;
@@ -65,6 +66,21 @@ impl AdventHelper {
         <T as FromStr>::Err: Debug,
     {
         parse_from_strings(&self.input_file())
+    }
+
+    pub fn parse_sequences_from_strings<T: FromStr>(&self, separator: &str) -> Vec<Vec<T>>
+    where
+        <T as FromStr>::Err: Debug,
+    {
+        let lines: Vec<String> = parse_from_strings(&self.input_file());
+        lines
+            .iter()
+            .map(|line| {
+                line.split(separator)
+                    .map(|x| x.parse().unwrap())
+                    .collect_vec()
+            })
+            .collect_vec()
     }
 }
 
