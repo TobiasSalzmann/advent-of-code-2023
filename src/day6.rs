@@ -1,8 +1,4 @@
 use crate::util::AdventHelper;
-use itertools::Itertools;
-use std::cmp::{max, min};
-
-use std::ops::Range;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -43,7 +39,7 @@ fn ways_to_win(race: &Race) -> i64 {
     for seconds_pressed in 0..=race.time {
         let seconds_remaining = race.time - seconds_pressed;
         let distance = seconds_remaining * seconds_pressed;
-        if (distance > race.distance) {
+        if distance > race.distance {
             ways += 1
         }
     }
