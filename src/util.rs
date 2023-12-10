@@ -1,4 +1,6 @@
 use itertools::Itertools;
+
+use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::fs;
 use std::str::FromStr;
@@ -95,6 +97,78 @@ impl Point {
         Point {
             x: x.into(),
             y: y.into(),
+        }
+    }
+
+    pub fn up(&self) -> Point {
+        Point {
+            x: self.x,
+            y: self.y - 1,
+        }
+    }
+
+    pub fn down(&self) -> Point {
+        Point {
+            x: self.x,
+            y: self.y + 1,
+        }
+    }
+
+    pub fn left(&self) -> Point {
+        Point {
+            x: self.x - 1,
+            y: self.y,
+        }
+    }
+
+    pub fn right(&self) -> Point {
+        Point {
+            x: self.x + 1,
+            y: self.y,
+        }
+    }
+
+    pub fn neighbours(&self) -> Vec<Point> {
+        vec![self.up(), self.down(), self.left(), self.right()]
+    }
+
+    pub fn in_bounds(&self, b: &Bounds) -> bool {
+        b.contains(self)
+    }
+
+    pub fn bounds(col: &HashSet<Point>) -> Bounds {
+        let min_x = col.iter().map(|p| p.x).min().unwrap();
+        let max_x = col.iter().map(|p| p.x).max().unwrap();
+        let min_y = col.iter().map(|p| p.y).min().unwrap();
+        let max_y = col.iter().map(|p| p.y).max().unwrap();
+        Bounds {
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Bounds {
+    pub min_x: i32,
+    pub max_x: i32,
+    pub min_y: i32,
+    pub max_y: i32,
+}
+
+impl Bounds {
+    pub fn contains(&self, p: &Point) -> bool {
+        self.min_x <= p.x && p.x <= self.max_x && self.min_y <= p.y && p.y <= self.max_y
+    }
+
+    pub fn expand(&self, _n: i32) -> Bounds {
+        Bounds {
+            min_x: self.min_x - 1,
+            max_x: self.max_x + 1,
+            min_y: self.min_y - 1,
+            max_y: self.max_y + 1,
         }
     }
 }
