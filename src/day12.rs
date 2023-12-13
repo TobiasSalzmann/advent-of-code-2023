@@ -1,8 +1,5 @@
-use crate::util::{AdventHelper, Point};
-use itertools::{Itertools, repeat_n};
-use std::cmp::max;
-
-use num::abs;
+use crate::util::AdventHelper;
+use itertools::{repeat_n, Itertools};
 
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -11,17 +8,26 @@ pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let springs: Vec<Spring> = advent.parse_from_strings();
 
-    advent.part1("sum of distances: {}", count_total_combinations(&springs, 1));
-    advent.part2("sum of distances: {}", count_total_combinations(&springs, 5));
+    advent.part1(
+        "sum of distances: {}",
+        count_total_combinations(&springs, 1),
+    );
+    advent.part2(
+        "sum of distances: {}",
+        count_total_combinations(&springs, 5),
+    );
 }
 
 fn count_total_combinations(springs: &Vec<Spring>, multiplicity: usize) -> i32 {
-    springs.iter().map(|x| {
-        count_combinations(&Spring{
-            row: repeat_n(&x.row, multiplicity).join("?"),
-            constraint: x.constraint.repeat(multiplicity),
+    springs
+        .iter()
+        .map(|x| {
+            count_combinations(&Spring {
+                row: repeat_n(&x.row, multiplicity).join("?"),
+                constraint: x.constraint.repeat(multiplicity),
+            })
         })
-    }).sum()
+        .sum()
 }
 
 fn count_combinations(spring: &Spring) -> i32 {
@@ -52,7 +58,6 @@ fn count_combinations(spring: &Spring) -> i32 {
         if is_valid {
             count_valid_combinations += 1
         }
-
     }
 
     count_valid_combinations
@@ -61,7 +66,7 @@ fn count_combinations(spring: &Spring) -> i32 {
 #[derive(Debug)]
 struct Spring {
     row: String,
-    constraint: Vec<i32>
+    constraint: Vec<i32>,
 }
 
 impl FromStr for Spring {
@@ -69,9 +74,13 @@ impl FromStr for Spring {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (row, raw_constraint) = s.split(" ").collect_tuple().unwrap();
-        let constraint = raw_constraint.split(",").map(|x| x.parse().unwrap()).collect_vec();
-        Ok(Spring { row: row.to_string(), constraint })
+        let constraint = raw_constraint
+            .split(",")
+            .map(|x| x.parse().unwrap())
+            .collect_vec();
+        Ok(Spring {
+            row: row.to_string(),
+            constraint,
+        })
     }
 }
-
-
