@@ -1,7 +1,7 @@
 use crate::util::AdventHelper;
 use itertools::{repeat_n, Itertools};
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 pub fn main() {
@@ -9,58 +9,71 @@ pub fn main() {
     let springs: Vec<Spring> = advent.parse_from_strings();
 
     advent.part1(
-        "sum of distances: {}",
+        "number of arrangements: {}",
         count_total_combinations(&springs, 1),
     );
     advent.part2(
-        "sum of distances: {}",
-        count_total_combinations(&springs, 5),
+        "number of arrangements: {}",
+        count_total_combinations(&springs, 100),
     );
 }
 
-fn count_total_combinations(springs: &Vec<Spring>, multiplicity: usize) -> i32 {
+fn count_total_combinations(springs: &Vec<Spring>, multiplicity: usize) -> u64 {
     springs
         .iter()
         .map(|x| {
             count_combinations(&Spring {
-                row: repeat_n(&x.row, multiplicity).join("?"),
+                row: repeat_n(&x.row, multiplicity).join("?") + ".",
                 constraint: x.constraint.repeat(multiplicity),
             })
         })
         .sum()
 }
 
-fn count_combinations(spring: &Spring) -> i32 {
-    let colored_sum: i32 = spring.constraint.iter().sum();
-    let length = spring.row.len() as i32;
-    let number_of_empty = length - colored_sum;
-    let number_of_blocks = spring.constraint.len();
-    let mut count_valid_combinations = 0;
-    let combinations = (0..=number_of_empty).combinations(number_of_blocks);
-    for combination in combinations {
-        let mut aggregate_sum = 0;
-        let mut colored = HashSet::new();
-        for (shift, block_length) in combination.iter().zip(&spring.constraint) {
-            let start = (aggregate_sum + shift) as usize;
-            let end = start + (*block_length as usize);
-            for i in start..end {
-                colored.insert(i);
+fn count_combinations(spring: &Spring) -> u64 {
+    let total_length = spring.row.len();
+    let total_blocks = spring.constraint.len();
+    let mut combinations: HashMap<(usize, usize), u64> = (0..=total_blocks)
+        .map(|number_of_blocks| {
+            (
+                (0, number_of_blocks),
+                if number_of_blocks == 0 { 1 } else { 0 },
+            )
+        })
+        .collect();
+
+    for prefix_length in 1..=total_length {
+        let new_character = spring.row.chars().nth(prefix_length - 1).unwrap();
+
+        let prev = combinations[&(prefix_length - 1, 0)];
+        combinations.insert(
+            (prefix_length, 0),
+            if new_character == '#' { 0 } else { prev },
+        );
+
+        for num_blocks in 1..=total_blocks {
+            let new_block = spring.constraint[num_blocks - 1] as usize;
+            let mut count = 0;
+            if new_character != '#' {
+                count += combinations[&(prefix_length - 1, num_blocks)];
+                if prefix_length > new_block {
+                    let block_location =
+                        &spring.row[prefix_length - new_block - 1..prefix_length - 1];
+                    assert_eq!(block_location.len(), new_block);
+                    if block_location.chars().all(|c| c != '.') {
+                        // println!("{} {}",prefix_length - new_block - 1, num_blocks - 1);
+                        count += combinations[&(prefix_length - new_block - 1, num_blocks - 1)]
+                    }
+                }
             }
-            aggregate_sum += block_length
-        }
-        let is_valid = spring.row.chars().enumerate().all(|(i, c)| {
-            if colored.contains(&i) {
-                c != '.'
-            } else {
-                c != '#'
-            }
-        });
-        if is_valid {
-            count_valid_combinations += 1
+
+            combinations.insert((prefix_length, num_blocks), count);
         }
     }
-
-    count_valid_combinations
+    for ((_len, _blocks), _count) in &combinations {
+        // println!("length {}, blocks {} -> {}", len, blocks, count)
+    }
+    combinations[&(total_length, total_blocks)]
 }
 
 #[derive(Debug)]
