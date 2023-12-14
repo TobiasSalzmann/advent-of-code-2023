@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 use std::collections::HashSet;
-use std::fmt::{Debug, Display};
+use std::fmt::{Debug, Display, Formatter};
 use std::fs;
 use std::str::FromStr;
 
@@ -86,10 +86,16 @@ impl AdventHelper {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub struct Point {
     pub(crate) x: i32,
     pub(crate) y: i32,
+}
+
+impl Display for Point {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "<{}, {}>", self.x, self.y)
+    }
 }
 
 impl Point {
