@@ -1,9 +1,10 @@
 use itertools::Itertools;
 
+use crate::util::Dir::{Down, Left, Right, Up};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
-use std::fs;
 use std::str::FromStr;
+use std::{env, fs};
 
 pub fn parse_from_strings<T: FromStr>(file_path: &str) -> Vec<T>
 where
@@ -33,9 +34,15 @@ pub(crate) struct AdventHelper {
 
 impl AdventHelper {
     pub fn from_file_name(file_name: &str) -> Self {
-        Self {
+        let it = Self {
             day: day(file_name).parse().unwrap(),
             suffix: "".to_string(),
+        };
+
+        if env::var("TEST").is_ok() {
+            it.test()
+        } else {
+            it
         }
     }
 
@@ -84,6 +91,11 @@ impl AdventHelper {
             })
             .collect_vec()
     }
+
+    pub fn parse_grid(&self) -> Vec<Vec<char>> {
+        let lines: Vec<String> = parse_from_strings(&self.input_file());
+        lines.iter().map(|s| s.chars().collect_vec()).collect_vec()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Ord, PartialOrd)]
@@ -98,11 +110,27 @@ impl Display for Point {
     }
 }
 
+pub trait IntoUnsafe<T>: Sized {
+    fn into_unsafe(self) -> T;
+}
+
+impl IntoUnsafe<i32> for usize {
+    fn into_unsafe(self) -> i32 {
+        self as i32
+    }
+}
+
+impl<T> IntoUnsafe<T> for T {
+    fn into_unsafe(self) -> T {
+        self
+    }
+}
+
 impl Point {
-    pub(crate) fn new(x: impl Into<i32>, y: impl Into<i32>) -> Point {
+    pub(crate) fn new(x: impl IntoUnsafe<i32>, y: impl IntoUnsafe<i32>) -> Point {
         Point {
-            x: x.into(),
-            y: y.into(),
+            x: x.into_unsafe(),
+            y: y.into_unsafe(),
         }
     }
 
@@ -134,6 +162,15 @@ impl Point {
         }
     }
 
+    pub fn mv(&self, d: Dir) -> Point {
+        match d {
+            Up => self.up(),
+            Right => self.right(),
+            Down => self.down(),
+            Left => self.left(),
+        }
+    }
+
     pub fn neighbours(&self) -> Vec<Point> {
         vec![self.up(), self.down(), self.left(), self.right()]
     }
@@ -154,6 +191,14 @@ impl Point {
             max_y,
         }
     }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Hash, Copy)]
+pub enum Dir {
+    Up,
+    Right,
+    Down,
+    Left,
 }
 
 #[derive(Debug)]
