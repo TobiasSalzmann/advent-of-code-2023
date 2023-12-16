@@ -4,6 +4,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 mod day2;
 mod day3;
 mod day4;
@@ -61,6 +62,7 @@ fn run(day: i32, time: bool) {
         12 => day12::main(),
         13 => day13::main(),
         14 => day14::main(),
+        15 => day15::main(),
         other => {
             println!("Day {} not yet implemented 😅", other)
         }
