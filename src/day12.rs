@@ -14,7 +14,7 @@ pub fn main() {
     );
     advent.part2(
         "number of arrangements: {}",
-        count_total_combinations(&springs, 100),
+        count_total_combinations(&springs, 5),
     );
 }
 
