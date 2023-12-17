@@ -1,6 +1,7 @@
 use crate::util::AdventHelper;
 use itertools::{repeat_n, Itertools};
 
+use rustc_hash::FxHashMap;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -18,7 +19,7 @@ pub fn main() {
     );
 }
 
-fn count_total_combinations(springs: &Vec<Spring>, multiplicity: usize) -> u64 {
+fn count_total_combinations(springs: &[Spring], multiplicity: usize) -> u64 {
     springs
         .iter()
         .map(|x| {
@@ -33,7 +34,7 @@ fn count_total_combinations(springs: &Vec<Spring>, multiplicity: usize) -> u64 {
 fn count_combinations(spring: &Spring) -> u64 {
     let total_length = spring.row.len();
     let total_blocks = spring.constraint.len();
-    let mut combinations: HashMap<(usize, usize), u64> = (0..=total_blocks)
+    let mut combinations: FxHashMap<(usize, usize), u64> = (0..=total_blocks)
         .map(|number_of_blocks| {
             (
                 (0, number_of_blocks),
@@ -59,9 +60,7 @@ fn count_combinations(spring: &Spring) -> u64 {
                 if prefix_length > new_block {
                     let block_location =
                         &spring.row[prefix_length - new_block - 1..prefix_length - 1];
-                    assert_eq!(block_location.len(), new_block);
                     if block_location.chars().all(|c| c != '.') {
-                        // println!("{} {}",prefix_length - new_block - 1, num_blocks - 1);
                         count += combinations[&(prefix_length - new_block - 1, num_blocks - 1)]
                     }
                 }
@@ -69,9 +68,6 @@ fn count_combinations(spring: &Spring) -> u64 {
 
             combinations.insert((prefix_length, num_blocks), count);
         }
-    }
-    for ((_len, _blocks), _count) in &combinations {
-        // println!("length {}, blocks {} -> {}", len, blocks, count)
     }
     combinations[&(total_length, total_blocks)]
 }
