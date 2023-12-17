@@ -1,6 +1,5 @@
 use crate::util::Dir::{Down, Left, Right, Up};
 use crate::util::{AdventHelper, Dir, Point};
-use itertools::Itertools;
 use rustc_hash::FxHashSet;
 
 pub fn main() {
