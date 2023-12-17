@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use crate::util::Dir::{Down, Left, Right, Up};
+use array2d::Array2D;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
@@ -95,6 +96,19 @@ impl AdventHelper {
     pub fn parse_grid(&self) -> Vec<Vec<char>> {
         let lines: Vec<String> = parse_from_strings(&self.input_file());
         lines.iter().map(|s| s.chars().collect_vec()).collect_vec()
+    }
+
+    pub fn parse_from_grid(&self) -> Array2D<i32> {
+        let lines: Vec<String> = parse_from_strings(&self.input_file());
+        let vec: Vec<Vec<i32>> = lines
+            .iter()
+            .map(|s| {
+                s.chars()
+                    .map(|c| c.to_string().parse().unwrap())
+                    .collect_vec()
+            })
+            .collect_vec();
+        Array2D::from_rows(&vec).unwrap()
     }
 }
 
@@ -199,6 +213,35 @@ pub enum Dir {
     Right,
     Down,
     Left,
+}
+
+impl Dir {
+    pub fn cw(&self) -> Dir {
+        match self {
+            Up => Right,
+            Right => Down,
+            Down => Left,
+            Left => Up,
+        }
+    }
+
+    pub fn ccw(&self) -> Dir {
+        match self {
+            Up => Left,
+            Right => Up,
+            Down => Right,
+            Left => Down,
+        }
+    }
+
+    pub fn pivot(&self) -> Dir {
+        match self {
+            Up => Down,
+            Right => Left,
+            Down => Up,
+            Left => Right,
+        }
+    }
 }
 
 #[derive(Debug)]
