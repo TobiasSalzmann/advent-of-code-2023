@@ -2,7 +2,7 @@ use crate::day14::Rock::{Fixed, Round};
 use crate::util::{AdventHelper, Point};
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -60,16 +60,16 @@ fn step(grid: &mut FxHashMap<Point, Rock>, mv: fn(&Point) -> Point) {
     let col: HashSet<Point> = grid.keys().cloned().collect();
     let bounds = Point::bounds(&col);
     let mut changed = 1;
+    let mut round_rock_vec = grid
+        .iter()
+        .filter(|(_, rock)| **rock == Round)
+        .map(|(p, _)| p)
+        .cloned()
+        .collect_vec();
     while changed > 0 {
         changed = 0;
-        let round_rocks = grid
-            .iter()
-            .filter(|(_, rock)| **rock == Round)
-            .map(|(p, _)| p)
-            .cloned()
-            .collect_vec();
-        for p in round_rocks {
-            let mut good = p;
+        for p in &mut round_rock_vec {
+            let mut good = p.clone();
             loop {
                 let next = mv(&good);
                 if grid.contains_key(&next) || !bounds.contains(&next) {
@@ -77,9 +77,10 @@ fn step(grid: &mut FxHashMap<Point, Rock>, mv: fn(&Point) -> Point) {
                 }
                 good = next;
             }
-            if good != p {
-                grid.remove(&p);
+            if good != *p {
+                grid.remove(p);
                 grid.insert(good, Round);
+                *p = good;
                 changed += 1;
             }
         }
