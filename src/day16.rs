@@ -1,6 +1,7 @@
 use crate::util::Dir::{Down, Left, Right, Up};
 use crate::util::{AdventHelper, Dir, Point};
 use itertools::{repeat_n, Itertools};
+use rustc_hash::FxHashSet;
 use std::collections::HashSet;
 
 pub fn main() {
@@ -31,19 +32,23 @@ fn max_energized(grid: &Vec<Vec<char>>) -> usize {
 }
 
 fn count_energized(grid: &Vec<Vec<char>>, x: usize, y: usize, dir: Dir) -> usize {
+    let capacity = grid.len() * grid[0].len();
     let initial = (Point::new(x, y), dir);
-    let mut visited = HashSet::new();
+    let mut visited = FxHashSet::with_capacity_and_hasher(capacity, Default::default());
+    let mut visited_point = FxHashSet::with_capacity_and_hasher(capacity, Default::default());
     let mut front = vec![initial];
     while let Some(current @ (point @ Point { x, y }, dir)) = front.pop() {
         if out_of_bounds(grid, x, y) || visited.contains(&current) {
             continue;
         }
         visited.insert(current);
+        visited_point.insert(point);
         for new_dir in reflect(grid, x, y, dir) {
             front.push((point.mv(new_dir), new_dir))
         }
     }
-    visited.iter().unique_by(|(p, _)| p).count()
+
+    visited_point.len()
 }
 
 fn out_of_bounds(grid: &Vec<Vec<char>>, x: i32, y: i32) -> bool {
