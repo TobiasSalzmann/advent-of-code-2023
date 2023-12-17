@@ -2,7 +2,6 @@ use crate::util::AdventHelper;
 use itertools::{repeat_n, Itertools};
 
 use rustc_hash::FxHashMap;
-use std::collections::HashMap;
 use std::str::FromStr;
 
 pub fn main() {
