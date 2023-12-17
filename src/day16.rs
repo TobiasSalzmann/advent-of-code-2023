@@ -1,8 +1,7 @@
 use crate::util::Dir::{Down, Left, Right, Up};
 use crate::util::{AdventHelper, Dir, Point};
-use itertools::{repeat_n, Itertools};
+use itertools::Itertools;
 use rustc_hash::FxHashSet;
-use std::collections::HashSet;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
