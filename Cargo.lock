@@ -12,6 +12,7 @@ dependencies = [
  "num",
  "pathfinding",
  "regex",
+ "rustc-hash",
  "tempfile",
 ]
 
