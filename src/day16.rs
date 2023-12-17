@@ -1,5 +1,6 @@
 use crate::util::Dir::{Down, Left, Right, Up};
 use crate::util::{AdventHelper, Dir, Point};
+use rayon::prelude::*;
 use rustc_hash::FxHashSet;
 
 pub fn main() {
@@ -17,10 +18,18 @@ fn max_energized(grid: &Vec<Vec<char>>) -> usize {
     let max_y = grid.len() - 1;
     let max_x = grid[0].len() - 1;
 
-    let top_down = (0..=max_x).map(|x| count_energized(grid, x, 0, Down));
-    let bottom_up = (0..=max_x).map(|x| count_energized(grid, x, max_y, Up));
-    let left_right = (0..=max_y).map(|y| count_energized(grid, 0, y, Right));
-    let right_left = (0..=max_y).map(|y| count_energized(grid, max_x, y, Left));
+    let top_down = (0..=max_x)
+        .into_par_iter()
+        .map(|x| count_energized(grid, x, 0, Down));
+    let bottom_up = (0..=max_x)
+        .into_par_iter()
+        .map(|x| count_energized(grid, x, max_y, Up));
+    let left_right = (0..=max_y)
+        .into_par_iter()
+        .map(|y| count_energized(grid, 0, y, Right));
+    let right_left = (0..=max_y)
+        .into_par_iter()
+        .map(|y| count_energized(grid, max_x, y, Left));
     top_down
         .chain(bottom_up)
         .chain(left_right)
