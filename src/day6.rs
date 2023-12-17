@@ -1,4 +1,5 @@
 use crate::util::AdventHelper;
+use rayon::prelude::*;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -30,20 +31,19 @@ pub fn main() {
     advent.part2("ways to win: {}", ways_to_win(&race));
 }
 
-fn multiply_ways_to_win(races: &Vec<Race>) -> i64 {
-    races.iter().map(|race| ways_to_win(race)).product()
+fn multiply_ways_to_win(races: &[Race]) -> usize {
+    races.iter().map(ways_to_win).product()
 }
 
-fn ways_to_win(race: &Race) -> i64 {
-    let mut ways = 0;
-    for seconds_pressed in 0..=race.time {
-        let seconds_remaining = race.time - seconds_pressed;
-        let distance = seconds_remaining * seconds_pressed;
-        if distance > race.distance {
-            ways += 1
-        }
-    }
-    ways
+fn ways_to_win(race: &Race) -> usize {
+    (0..=race.time)
+        .into_par_iter()
+        .filter(|seconds_pressed| {
+            let seconds_remaining = race.time - seconds_pressed;
+            let distance = seconds_remaining * seconds_pressed;
+            distance > race.distance
+        })
+        .count()
 }
 
 struct Race {
