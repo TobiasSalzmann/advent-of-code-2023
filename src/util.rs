@@ -185,6 +185,15 @@ impl Point {
         }
     }
 
+    pub fn mv_mulitple(&self, d: Dir, n: i32) -> Point {
+        match d {
+            Up => Point::new(self.x, self.y - n),
+            Right => Point::new(self.x + n, self.y + n),
+            Down => Point::new(self.x, self.y + n),
+            Left => Point::new(self.x - n, self.y),
+        }
+    }
+
     pub fn neighbours(&self) -> Vec<Point> {
         vec![self.up(), self.down(), self.left(), self.right()]
     }
@@ -264,6 +273,16 @@ impl Bounds {
             min_y: self.min_y - 1,
             max_y: self.max_y + 1,
         }
+    }
+
+    pub fn to_set(&self) -> HashSet<Point> {
+        let mut set = HashSet::new();
+        for x in self.min_x..=self.max_x {
+            for y in self.min_y..=self.max_y {
+                set.insert(Point::new(x, y));
+            }
+        }
+        set
     }
 }
 
