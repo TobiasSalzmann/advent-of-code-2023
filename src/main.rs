@@ -20,30 +20,41 @@ mod util;
 extern crate core;
 extern crate dotenv;
 
-use dotenv::dotenv;
 use std::env;
 use std::time::Instant;
 
+use clap::{arg, Parser};
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Day to run
+    #[arg(value_parser = clap::value_parser!(i32).range(0..=24))]
+    day: i32,
+
+    /// Use test file instead (resources/day<day>.test.txt)
+    #[arg(short, long, env, default_value_t = false)]
+    test: bool,
+
+    /// Measure execution time
+    #[arg(short, long, env, default_value_t = false)]
+    time: bool,
+}
 fn main() {
-    let day_string = env::args()
-        .nth(1)
-        .or_else(|| {
-            dotenv().ok();
-            env::var("DAY").ok()
-        })
-        .unwrap_or("1".to_string());
+    let args = Args::parse();
 
-    let day = day_string
-        .parse::<i32>()
-        .expect("Wrong format for day variable");
+    if args.test {
+        env::set_var("TEST", "true");
+    }
 
-    if day == 0 {
+    if args.day == 0 {
         for d in 1..=25 {
-            run(d, env::var("TIME").is_ok());
+            run(d, args.time);
             println!()
         }
     } else {
-        run(day, env::var("TIME").is_ok())
+        run(args.day, args.time)
     }
 }
 
