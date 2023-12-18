@@ -35,7 +35,7 @@ struct Args {
     day: i32,
 
     /// Use test file instead (resources/day<day>.test.txt)
-    #[arg(short, long, env, default_value_t = false)]
+    #[arg(long, env, default_value_t = false)]
     test: bool,
 
     /// Measure execution time

@@ -1,9 +1,11 @@
-use itertools::Itertools;
+use itertools::{Itertools, Product};
 
 use crate::util::Dir::{Down, Left, Right, Up};
 use array2d::Array2D;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
+use std::iter::Map;
+use std::ops::RangeInclusive;
 use std::str::FromStr;
 use std::{env, fs};
 
@@ -185,10 +187,11 @@ impl Point {
         }
     }
 
-    pub fn mv_mulitple(&self, d: Dir, n: i32) -> Point {
+    pub fn mv_mulitple(&self, d: Dir, n: usize) -> Point {
+        let n = n as i32;
         match d {
             Up => Point::new(self.x, self.y - n),
-            Right => Point::new(self.x + n, self.y + n),
+            Right => Point::new(self.x + n, self.y),
             Down => Point::new(self.x, self.y + n),
             Left => Point::new(self.x - n, self.y),
         }
@@ -202,7 +205,7 @@ impl Point {
         b.contains(self)
     }
 
-    pub fn bounds(col: &HashSet<Point>) -> Bounds {
+    pub fn bounds<H>(col: &HashSet<Point, H>) -> Bounds {
         let min_x = col.iter().map(|p| p.x).min().unwrap();
         let max_x = col.iter().map(|p| p.x).max().unwrap();
         let min_y = col.iter().map(|p| p.y).min().unwrap();
@@ -261,7 +264,26 @@ pub struct Bounds {
     pub max_y: i32,
 }
 
+impl IntoIterator for Bounds {
+    type Item = Point;
+    type IntoIter = Map<Product<RangeInclusive<i32>, RangeInclusive<i32>>, fn((i32, i32)) -> Point>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.xs()
+            .cartesian_product(self.ys())
+            .map(|(x, y)| Point { x, y })
+    }
+}
+
 impl Bounds {
+    pub fn xs(&self) -> RangeInclusive<i32> {
+        self.min_x..=self.max_x
+    }
+
+    pub fn ys(&self) -> RangeInclusive<i32> {
+        self.min_y..=self.max_y
+    }
+
     pub fn contains(&self, p: &Point) -> bool {
         self.min_x <= p.x && p.x <= self.max_x && self.min_y <= p.y && p.y <= self.max_y
     }
