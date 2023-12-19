@@ -1,36 +1,130 @@
 use crate::day19::Action::{Accept, Call, Reject};
 use crate::day19::Case::{Any, GreaterThan, LessThan};
-use crate::util::Dir::{Down, Left, Right, Up};
-use crate::util::{AdventHelper, Bounds, Dir, Point};
+use crate::util::AdventHelper;
 use itertools::Itertools;
-use pathfinding::prelude::dfs_reach;
-use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
-use std::alloc::System;
-use std::collections::HashSet;
-use std::hash::{BuildHasher, BuildHasherDefault};
-use std::str::FromStr;
+use std::cmp::{max, min};
+use std::ops::RangeInclusive;
+
+use rustc_hash::FxHashMap;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let system: Syst = parse_system(&advent.parse_from_strings());
 
     advent.part1("Count accepted: {}", count_accepted(&system));
-    advent.part2("Part 2: {}", part2(&system))
+    advent.part2("All accepted: {}", count_total_accepted(&system.functions))
 }
 
-fn part2(system: &Syst) -> usize {
-    system
-        .functions
-        .values()
-        .flat_map(|f| &f.cases)
-        .flat_map(|c| match c {
-            GreaterThan('x', x, _) => vec![x],
-            LessThan('x', x, _) => vec![x],
-            _ => vec![],
-        })
-        .sorted()
-        .unique()
-        .count()
+fn count_total_accepted(map: &FxHashMap<String, Function>) -> u64 {
+    let mut queue = vec![(
+        PartRange {
+            x: 1..=4000,
+            m: 1..=4000,
+            a: 1..=4000,
+            s: 1..=4000,
+        },
+        &map["in"],
+    )];
+
+    let mut accepted_count = 0;
+
+    while let Some((mut part, current_function)) = queue.pop() {
+        for case in &current_function.cases {
+            let (action, finished_part) = match case {
+                GreaterThan(key, check, action) => {
+                    let (p1, p2) = part.split(*key, check + 1);
+                    part = p1;
+                    (action, p2)
+                }
+                LessThan(key, check, action) => {
+                    let (p1, p2) = part.split(*key, *check);
+                    part = p2;
+                    (action, p1)
+                }
+                Any(action) => (action, part.clone()),
+            };
+            if finished_part.is_empty() {
+                break;
+            }
+            match action {
+                Accept => accepted_count += finished_part.size(),
+                Call(next_fun) => {
+                    queue.push((finished_part, &map[next_fun]));
+                }
+                _ => {}
+            }
+        }
+    }
+    accepted_count
+}
+
+#[derive(Clone)]
+struct PartRange {
+    x: RangeInclusive<i32>,
+    m: RangeInclusive<i32>,
+    a: RangeInclusive<i32>,
+    s: RangeInclusive<i32>,
+}
+
+impl PartRange {
+    fn size(&self) -> u64 {
+        let x = max(self.x.end() - self.x.start() + 1, 0) as u64;
+        let m = max(self.m.end() - self.m.start() + 1, 0) as u64;
+        let a = max(self.a.end() - self.a.start() + 1, 0) as u64;
+        let s = max(self.s.end() - self.s.start() + 1, 0) as u64;
+        x * m * a * s
+    }
+
+    fn is_empty(&self) -> bool {
+        self.x.is_empty() || self.m.is_empty() || self.a.is_empty() || self.s.is_empty()
+    }
+
+    fn split(&self, c: char, value: i32) -> (Self, Self) {
+        match c {
+            'x' => (
+                PartRange {
+                    x: *self.x.start()..=min(value - 1, *self.x.end()),
+                    ..self.clone()
+                },
+                PartRange {
+                    x: max(value, *self.x.start())..=*self.x.end(),
+                    ..self.clone()
+                },
+            ),
+            'm' => (
+                PartRange {
+                    m: *self.m.start()..=min(value - 1, *self.m.end()),
+                    ..self.clone()
+                },
+                PartRange {
+                    m: max(value, *self.m.start())..=*self.m.end(),
+                    ..self.clone()
+                },
+            ),
+            'a' => (
+                PartRange {
+                    a: *self.a.start()..=min(value - 1, *self.a.end()),
+                    ..self.clone()
+                },
+                PartRange {
+                    a: max(value, *self.a.start())..=*self.a.end(),
+                    ..self.clone()
+                },
+            ),
+            's' => (
+                PartRange {
+                    s: *self.s.start()..=min(value - 1, *self.s.end()),
+                    ..self.clone()
+                },
+                PartRange {
+                    s: max(value, *self.s.start())..=*self.s.end(),
+                    ..self.clone()
+                },
+            ),
+
+            _ => panic!(),
+        }
+    }
 }
 
 fn count_accepted(system: &Syst) -> i32 {

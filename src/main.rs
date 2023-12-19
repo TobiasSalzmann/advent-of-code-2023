@@ -88,6 +88,10 @@ fn run(day: i32, time: bool) {
     }
     let duration = start.elapsed();
     if time {
-        println!("Time: {} ms", duration.as_millis())
+        if duration.as_millis() < 3 {
+            println!("Time: {} μs", duration.as_micros())
+        } else {
+            println!("Time: {} ms", duration.as_millis())
+        }
     }
 }
