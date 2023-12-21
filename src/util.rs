@@ -100,6 +100,10 @@ impl AdventHelper {
         lines.iter().map(|s| s.chars().collect_vec()).collect_vec()
     }
 
+    pub fn parse_grid_2d(&self) -> Array2D<char> {
+        Array2D::from_rows(&self.parse_grid()).unwrap()
+    }
+
     pub fn parse_from_grid(&self) -> Array2D<i32> {
         let lines: Vec<String> = parse_from_strings(&self.input_file());
         let vec: Vec<Vec<i32>> = lines
