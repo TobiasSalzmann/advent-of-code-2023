@@ -1,5 +1,6 @@
 use crate::util::AdventHelper;
 use itertools::Itertools;
+use num::integer::lcm;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -10,9 +11,13 @@ use rustc_hash::FxHashMap;
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let mut system: MachineSystem = parse_system(&advent.parse_from_strings());
+    let mut system2: MachineSystem = parse_system(&advent.parse_from_strings());
 
     advent.part1("Pulse product: {}", system.push_button(1000, false));
-    advent.part2("Pulse product: {}", system.push_button(10000000000, true))
+    advent.part2(
+        "Pulse product: {}",
+        system2.push_button(10000000000000, true),
+    )
 }
 
 fn parse_system(input: &Vec<String>) -> MachineSystem {
@@ -64,18 +69,17 @@ impl MachineSystem {
     pub(crate) fn push_button(&mut self, times: usize, exit_on_rx: bool) -> usize {
         let mut low_count = 0;
         let mut high_count = 0;
-
+        let name_before_rx = self
+            .destinations
+            .iter()
+            .find(|(_, ds)| ds.contains(&"rx".to_string()))
+            .unwrap()
+            .0;
+        let mut periods = FxHashMap::default();
         for button_presses in 1..=times {
-            if button_presses % 1000000 == 0 {
-                println!("{button_presses}");
-            }
             let mut pulses =
                 VecDeque::from([("button".to_string(), Low, "broadcaster".to_string())]);
             while let Some((src, signal, cur)) = pulses.pop_front() {
-                if signal == Low && exit_on_rx && cur == "rx" {
-                    return button_presses;
-                }
-
                 if signal == Low {
                     low_count += 1
                 } else {
@@ -85,14 +89,21 @@ impl MachineSystem {
                 let Some(current) = self.modules.get_mut(&cur) else {
                     continue;
                 };
-                // println!("{src} -{:?}-> {cur}", signal);
-                // println!("{current:?}");
-
                 let new_signal = match current {
                     Conjunction {
                         ref mut latest_signals,
                     } => {
-                        latest_signals.insert(src, signal);
+                        if exit_on_rx
+                            && cur == *name_before_rx
+                            && signal == High
+                            && !periods.contains_key(&src)
+                        {
+                            periods.insert(src.clone(), button_presses);
+                            if periods.len() == latest_signals.len() {
+                                return periods.values().fold(1, |a, b| lcm(a, *b));
+                            }
+                        }
+                        latest_signals.insert(src.clone(), signal);
                         if latest_signals.values().all(|x| *x == High) {
                             Some(Low)
                         } else {
@@ -118,7 +129,6 @@ impl MachineSystem {
                 };
             }
         }
-        println!("{low_count} {high_count}");
         low_count * high_count
     }
 }
