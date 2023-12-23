@@ -7,10 +7,11 @@ pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let grid = advent.parse_grid_2d();
 
-    advent.part1("Desintegratable blocks: {}", longest_walk(&grid));
+    advent.part1("Longest walk: {}", longest_walk(&grid, false));
+    advent.part2("Longest walk: {}", longest_walk(&grid, true));
 }
 
-fn longest_walk(grid: &Array2D<char>) -> usize {
+fn longest_walk(grid: &Array2D<char>, climb_slope: bool) -> usize {
     let start: (usize, usize) = (0, 1);
     let end = (grid.column_len() - 1, grid.row_len() - 2);
     println!("{start:?}");
@@ -18,7 +19,7 @@ fn longest_walk(grid: &Array2D<char>) -> usize {
 
     dijkstra(
         &vec![start],
-        |s| successors(s, grid, end),
+        |s| successors(s, grid, end, climb_slope),
         |x| *x.last().unwrap() == end,
     )
     .unwrap()
@@ -31,6 +32,7 @@ fn successors(
     visited: &Vec<(usize, usize)>,
     grid: &Array2D<char>,
     end: (usize, usize),
+    climb_slope: bool,
 ) -> Vec<(Vec<(usize, usize)>, usize)> {
     let current @ (y, x) = *visited.last().unwrap();
     let c = grid[current];
@@ -40,16 +42,16 @@ fn successors(
     let down = (y + 1, x);
 
     let mut succ = vec![];
-    if c == '.' || c == '>' {
+    if c == '.' || c == '>' || climb_slope {
         succ.push(right)
     }
-    if c == '.' || c == '<' {
+    if c == '.' || c == '<' || climb_slope {
         succ.push(left)
     }
-    if c == '.' || c == '^' {
+    if c == '.' || c == '^' || climb_slope {
         succ.push(up)
     }
-    if c == '.' || c == 'v' {
+    if c == '.' || c == 'v' || climb_slope {
         succ.push(down)
     }
 
