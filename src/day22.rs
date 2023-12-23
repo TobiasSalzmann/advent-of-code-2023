@@ -60,7 +60,7 @@ impl FromStr for Block {
 
 fn count_desintegratable(blocks: &Vec<Block>) -> usize {
     let map = get_desintegratable(blocks);
-    map.iter().filter(|(k, v)| v.is_empty()).count()
+    map.iter().filter(|(_k, v)| v.is_empty()).count()
 }
 
 fn count_total_falling(blocks: &Vec<Block>) -> usize {
@@ -80,13 +80,13 @@ fn get_desintegratable(blocks: &Vec<Block>) -> FxHashMap<usize, Vec<usize>> {
 
     let get_below: FxHashMap<usize, Vec<usize>> = rests_on
         .iter()
-        .into_group_map_by(|(above, below)| above)
+        .into_group_map_by(|(above, _below)| above)
         .iter()
         .map(|(k, v)| (**k, v.iter().map(|(_, below)| *below).collect_vec()))
         .collect();
     let get_above: FxHashMap<usize, Vec<usize>> = rests_on
         .iter()
-        .into_group_map_by(|(above, below)| below)
+        .into_group_map_by(|(_above, below)| below)
         .iter()
         .map(|(k, v)| (**k, v.iter().map(|(above, _)| *above).collect_vec()))
         .collect();
@@ -109,7 +109,7 @@ fn drop(blocks: &Vec<Block>) -> (usize, FxHashSet<(usize, usize)>, Vec<Block>) {
     let mut rests_on = FxHashSet::default();
     let mut dropped = FxHashSet::default();
     let mut dropped_blocks = vec![];
-    for (i, b) in blocks.iter().enumerate().sorted_by_key(|(i, b)| b.start.2) {
+    for (i, b) in blocks.iter().enumerate().sorted_by_key(|(_i, b)| b.start.2) {
         let mut b = b.clone();
         let mut has_dropped = false;
         loop {

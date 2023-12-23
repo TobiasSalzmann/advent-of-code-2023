@@ -13,7 +13,7 @@ pub fn main() {
 fn reachable_plots(garden: &Array2D<char>, steps: usize) -> usize {
     let ((y, x), _) = garden
         .enumerate_row_major()
-        .find(|((y, x), c)| **c == 'S')
+        .find(|((_y, _x), c)| **c == 'S')
         .unwrap();
     let mut cache = FxHashMap::default();
     let mut total = 0;
