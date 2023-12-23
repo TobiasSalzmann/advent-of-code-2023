@@ -1,9 +1,6 @@
-use crate::util::{AdventHelper, Point};
-use array2d::Array2D;
+use crate::util::AdventHelper;
 use itertools::Itertools;
-use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
-use std::collections::{HashMap, HashSet};
-use std::hash::BuildHasherDefault;
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::str::FromStr;
 
 pub fn main() {
