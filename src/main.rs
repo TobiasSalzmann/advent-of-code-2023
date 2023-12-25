@@ -15,6 +15,7 @@ mod day21;
 mod day22;
 mod day23;
 mod day24;
+mod day25;
 mod day3;
 mod day4;
 mod day5;
@@ -37,7 +38,7 @@ use clap::{arg, Parser};
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Day to run
-    #[arg(value_parser = clap::value_parser!(i32).range(0..=24))]
+    #[arg(value_parser = clap::value_parser!(i32).range(0..=25))]
     day: i32,
 
     /// Use test file instead (resources/day<day>.test.txt)
@@ -92,6 +93,7 @@ fn run(day: i32, time: bool) {
         22 => day22::main(),
         23 => day23::main(),
         24 => day24::main(),
+        25 => day25::main(),
         other => {
             println!("Day {} not yet implemented 😅", other)
         }
