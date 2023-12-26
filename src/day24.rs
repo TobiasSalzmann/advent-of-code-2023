@@ -20,9 +20,8 @@ pub fn main() {
     advent.part1(
         "Longest walk: {}",
         intersecting_paths(&hailstones, 200000000000000.0, 400000000000000.0),
-        // intersecting_paths(&hailstones, 7.0, 27.0),
     );
-    projected_intersections(&hailstones);
+    advent.part2("Stone start sum: {}", projected_intersections(&hailstones));
 }
 
 fn intersecting_paths(
@@ -134,42 +133,38 @@ impl FromStr for Hailstone<i128> {
     }
 }
 
-fn projected_intersections(hailstones: &Vec<Hailstone<i128>>) -> Vec<Vec2> {
-    let hailstones = hailstones.iter().take(10).cloned().collect_vec();
-    for x in -500..=500 {
-        for y in -500..=500 {
-            let xy = intersect_project(&hailstones, Vec3 { x, y, z: 0 }, |v| (v.x, v.y));
-            if xy.is_none() {
-                continue;
-            }
-            for z in -500..=500 {
-                let xz = intersect_project(&hailstones, Vec3 { x, y, z }, |v| (v.x, v.z));
-                let yz = intersect_project(&hailstones, Vec3 { x, y, z }, |v| (v.y, v.z));
-                if xz.is_some() && yz.is_some() {
-                    println!(
-                        "[{},{},{}] + t* [{x},{y},{z}]",
-                        xz.unwrap().0,
-                        yz.unwrap().0,
-                        yz.unwrap().1
-                    );
-                    println!("{}", -(xz.unwrap().0 + yz.unwrap().0 + yz.unwrap().1))
+fn projected_intersections(hailstones: &Vec<Hailstone<i128>>) -> i128 {
+    let mut search_area = 1;
+    loop {
+        for x in -search_area..=search_area {
+            for y in -search_area..=search_area {
+                let xy = intersect_project(hailstones, Vec3 { x, y, z: 0 }, |v| (v.x, v.y));
+                if xy.is_none() {
+                    continue;
+                }
+                for z in -search_area..=search_area {
+                    let xz = intersect_project(hailstones, Vec3 { x, y, z }, |v| (v.x, v.z));
+                    if let Some((found_x, found_z)) = xz {
+                        let yz = intersect_project(hailstones, Vec3 { x, y, z }, |v| (v.y, v.z));
+                        if let Some((found_y, _)) = yz {
+                            return found_x + found_y + found_z;
+                        }
+                    }
                 }
             }
         }
+        search_area *= 2;
     }
 
-    vec![]
+    panic!("not found")
 }
 
 fn intersect_project(
     hailstones: &Vec<Hailstone<i128>>,
     modifier: Vec3<i128>,
     f: fn(Vec3<i128>) -> (i128, i128),
-) -> Option<(f64, f64)> {
-    let mut x_min = 1000000000000000000.0;
-    let mut x_max = -1000000000000000000.0;
-    let mut y_min = 1000000000000000000.0;
-    let mut y_max = -1000000000000000000.0;
+) -> Option<(i128, i128)> {
+    let mut intersect = None;
     for (a, b) in hailstones.iter().tuple_combinations() {
         let (x1, y1) = f(a.position);
         let (x2, y2) = f(a.position + a.velocity + modifier);
@@ -183,28 +178,19 @@ fn intersect_project(
         if denom == 0 {
             continue;
         }
-        let x = x_num as f64 / denom as f64;
-        let y = y_num as f64 / denom as f64;
-        if x > x_max {
-            x_max = x
+        let x = x_num / denom;
+        let y = y_num / denom;
+        if x_num % denom != 0 || y_num % denom != 0 {
+            return None;
         }
-        if x < x_min {
-            x_min = x
+
+        if let Some((prev_x, prev_y)) = intersect {
+            if prev_x != x || prev_y != y {
+                return None;
+            }
+        } else {
+            intersect = Some((x, y))
         }
-        if y > y_max {
-            y_max = y
-        }
-        if y < y_min {
-            y_min = y
-        }
-        // println!("{x} {y}");
     }
-    if (x_max - x_min).max(y_max - y_min) < 0.5 {
-        // println!("found: {modifier:?}");
-        // println!("{}", (x_max - x_min).max(y_max - y_min));
-        println!("coords: {x_max} {y_max}");
-        Some((x_max.round(), y_max.round()))
-    } else {
-        None
-    }
+    intersect
 }
