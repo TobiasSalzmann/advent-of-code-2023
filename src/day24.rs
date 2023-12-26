@@ -8,6 +8,7 @@ use na::{Dyn, IsContiguous};
 use num::complex::ComplexFloat;
 use num::{signum, Num};
 use plotters::prelude::*;
+use std::cmp::max;
 use std::fmt::Display;
 use std::ops::Add;
 use std::str::FromStr;
@@ -21,6 +22,7 @@ pub fn main() {
         intersecting_paths(&hailstones, 200000000000000.0, 400000000000000.0),
         // intersecting_paths(&hailstones, 7.0, 27.0),
     );
+    projected_intersections(&hailstones);
 }
 
 fn intersecting_paths(
@@ -132,25 +134,77 @@ impl FromStr for Hailstone<i128> {
     }
 }
 
-fn projected_intersections(hailstones: &Vec<Hailstone<f64>>) -> Vec<Vec2> {
-    let mut intersections = vec![];
+fn projected_intersections(hailstones: &Vec<Hailstone<i128>>) -> Vec<Vec2> {
+    let hailstones = hailstones.iter().take(10).cloned().collect_vec();
+    for x in -500..=500 {
+        for y in -500..=500 {
+            let xy = intersect_project(&hailstones, Vec3 { x, y, z: 0 }, |v| (v.x, v.y));
+            if xy.is_none() {
+                continue;
+            }
+            for z in -500..=500 {
+                let xz = intersect_project(&hailstones, Vec3 { x, y, z }, |v| (v.x, v.z));
+                let yz = intersect_project(&hailstones, Vec3 { x, y, z }, |v| (v.y, v.z));
+                if xz.is_some() && yz.is_some() {
+                    println!(
+                        "[{},{},{}] + t* [{x},{y},{z}]",
+                        xz.unwrap().0,
+                        yz.unwrap().0,
+                        yz.unwrap().1
+                    );
+                    println!("{}", -(xz.unwrap().0 + yz.unwrap().0 + yz.unwrap().1))
+                }
+            }
+        }
+    }
+
+    vec![]
+}
+
+fn intersect_project(
+    hailstones: &Vec<Hailstone<i128>>,
+    modifier: Vec3<i128>,
+    f: fn(Vec3<i128>) -> (i128, i128),
+) -> Option<(f64, f64)> {
+    let mut x_min = 1000000000000000000.0;
+    let mut x_max = -1000000000000000000.0;
+    let mut y_min = 1000000000000000000.0;
+    let mut y_max = -1000000000000000000.0;
     for (a, b) in hailstones.iter().tuple_combinations() {
-        let Vec3 { x: x1, y: y1, z: _ } = a.position;
-        let Vec3 { x: x2, y: y2, z: _ } = a.position + a.velocity;
-        let Vec3 { x: x3, y: y3, z: _ } = b.position;
-        let Vec3 { x: x4, y: y4, z: _ } = b.position + b.velocity;
+        let (x1, y1) = f(a.position);
+        let (x2, y2) = f(a.position + a.velocity + modifier);
+        let (x3, y3) = f(b.position);
+        let (x4, y4) = f(b.position + b.velocity + modifier);
 
         let denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
         let x_num = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4);
         let y_num = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4);
 
-        if denom == 0.0 {
+        if denom == 0 {
             continue;
         }
         let x = x_num as f64 / denom as f64;
         let y = y_num as f64 / denom as f64;
-
-        intersections.push(Vec2 { x, y })
+        if x > x_max {
+            x_max = x
+        }
+        if x < x_min {
+            x_min = x
+        }
+        if y > y_max {
+            y_max = y
+        }
+        if y < y_min {
+            y_min = y
+        }
+        // println!("{x} {y}");
     }
-    intersections
+    if (x_max - x_min).max(y_max - y_min) < 0.5 {
+        // println!("found: {modifier:?}");
+        // println!("{}", (x_max - x_min).max(y_max - y_min));
+        println!("coords: {x_max} {y_max}");
+        Some((x_max.round(), y_max.round()))
+    } else {
+        None
+    }
 }
