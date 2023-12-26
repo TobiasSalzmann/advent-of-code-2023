@@ -1,14 +1,6 @@
 use crate::util::AdventHelper;
-use gomez::algo::trust_region::TrustRegionOptions;
-use gomez::algo::{Lipo, NelderMead, TrustRegion};
-use gomez::{nalgebra as na, OptimizerDriver};
-use gomez::{Domain, Problem, SolverDriver, System};
 use itertools::Itertools;
-use na::{Dyn, IsContiguous};
-use num::complex::ComplexFloat;
-use num::{signum, Num};
-use plotters::prelude::*;
-use std::cmp::max;
+use num::signum;
 use std::fmt::Display;
 use std::ops::Add;
 use std::str::FromStr;
@@ -18,17 +10,13 @@ pub fn main() {
     let hailstones = advent.parse_from_strings();
 
     advent.part1(
-        "Longest walk: {}",
+        "Intersections: {}",
         intersecting_paths(&hailstones, 200000000000000.0, 400000000000000.0),
     );
     advent.part2("Stone start sum: {}", projected_intersections(&hailstones));
 }
 
-fn intersecting_paths(
-    hailstones: &Vec<Hailstone<i128>>,
-    lower_bound: f64,
-    upper_bound: f64,
-) -> usize {
+fn intersecting_paths(hailstones: &Vec<Hailstone>, lower_bound: f64, upper_bound: f64) -> usize {
     let mut count = 0;
     for (a, b) in hailstones.iter().tuple_combinations() {
         let Vec3 { x: x1, y: y1, z: _ } = a.position;
@@ -59,33 +47,20 @@ fn intersecting_paths(
     count
 }
 #[derive(Debug, Clone)]
-struct Hailstone<T> {
-    position: Vec3<T>,
-    velocity: Vec3<T>,
+struct Hailstone {
+    position: Vec3,
+    velocity: Vec3,
 }
 
 #[derive(Copy, Clone, Debug)]
-struct Vec3<T> {
-    x: T,
-    y: T,
-    z: T,
+struct Vec3 {
+    x: i128,
+    y: i128,
+    z: i128,
 }
 
-impl Vec3<f64> {
-    fn rotate(&self, alpha: f64, beta: f64) -> Vec3<f64> {
-        Vec3 {
-            x: alpha.cos() * beta.cos() * self.x - alpha.sin() * self.y
-                + alpha.cos() * beta.sin() * self.z,
-            y: alpha.sin() * beta.cos() * self.x
-                + alpha.cos() * self.y
-                + alpha.sin() * beta.sin() * self.z,
-            z: -beta.sin() * self.x + beta.cos() * self.z,
-        }
-    }
-}
-
-impl<T: Add> Add for Vec3<T> {
-    type Output = Vec3<T::Output>;
+impl Add for Vec3 {
+    type Output = Vec3;
 
     fn add(self, rhs: Self) -> Self::Output {
         Vec3 {
@@ -96,24 +71,7 @@ impl<T: Add> Add for Vec3<T> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-struct Vec2 {
-    x: f64,
-    y: f64,
-}
-
-impl Add for Vec2 {
-    type Output = Vec2;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Vec2 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
-}
-
-impl FromStr for Hailstone<i128> {
+impl FromStr for Hailstone {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -133,7 +91,7 @@ impl FromStr for Hailstone<i128> {
     }
 }
 
-fn projected_intersections(hailstones: &Vec<Hailstone<i128>>) -> i128 {
+fn projected_intersections(hailstones: &Vec<Hailstone>) -> i128 {
     let mut search_area = 1;
     loop {
         for x in -search_area..=search_area {
@@ -160,9 +118,9 @@ fn projected_intersections(hailstones: &Vec<Hailstone<i128>>) -> i128 {
 }
 
 fn intersect_project(
-    hailstones: &Vec<Hailstone<i128>>,
-    modifier: Vec3<i128>,
-    f: fn(Vec3<i128>) -> (i128, i128),
+    hailstones: &Vec<Hailstone>,
+    modifier: Vec3,
+    f: fn(Vec3) -> (i128, i128),
 ) -> Option<(i128, i128)> {
     let mut intersect = None;
     for (a, b) in hailstones.iter().tuple_combinations() {
