@@ -1,5 +1,6 @@
 use crate::util::{AdventHelper, Point};
 use array2d::Array2D;
+use num::Integer;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 pub fn main() {
@@ -70,12 +71,20 @@ fn reachable_plots_row(
 }
 
 fn reachable_plots_with_wrapped_rows(start: &Point, garden: &Array2D<char>, steps: usize) -> usize {
+    let cap = garden.row_len() * garden.column_len();
+    let mut previous_even = FxHashSet::from_iter([start.clone()]);
+    previous_even.reserve(cap);
+    let mut previous_odd = FxHashSet::default();
+    previous_odd.reserve(cap);
     let mut current = FxHashSet::from_iter([start.clone()]);
-    for _ in 1..=steps {
+    for step in 1..=steps {
         current = current
             .iter()
             .flat_map(|p| p.neighbours())
             .filter(|p| {
+                if previous_even.contains(p) || previous_odd.contains(p) {
+                    return false;
+                }
                 let tile = garden.get(
                     p.y as usize,
                     p.x.rem_euclid(garden.row_len() as i32) as usize,
@@ -83,7 +92,18 @@ fn reachable_plots_with_wrapped_rows(start: &Point, garden: &Array2D<char>, step
                 tile == Some(&'.') || tile == Some(&'S')
             })
             .collect();
+        for p in &current {
+            if step.is_even() {
+                previous_even.insert(*p);
+            } else {
+                previous_odd.insert(*p);
+            }
+        }
     }
 
-    current.len()
+    if steps.is_even() {
+        previous_even.len()
+    } else {
+        previous_odd.len()
+    }
 }
