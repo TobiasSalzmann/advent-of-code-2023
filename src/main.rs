@@ -57,9 +57,13 @@ fn main() {
     }
 
     if args.day == 0 {
+        let start = Instant::now();
         for d in 1..=25 {
             run(d, args.time);
-            println!()
+            println!();
+        }
+        if args.time {
+            println!("Total Time: {} ms", start.elapsed().as_millis());
         }
     } else {
         run(args.day, args.time)

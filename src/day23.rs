@@ -2,7 +2,6 @@ use crate::util::AdventHelper;
 use array2d::Array2D;
 use bit_set::BitSet;
 use itertools::Itertools;
-use pathfinding::prelude::dijkstra;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::iter;
 
@@ -51,19 +50,25 @@ fn simplify(
 ) -> FxHashMap<(usize, usize), Vec<((usize, usize), usize)>> {
     let interesting_nodes: FxHashSet<(usize, usize)> = grid
         .enumerate_row_major()
-        .filter(|(p, c)| **c != '#' && direct_successors(p, grid, ignore_slopes).len() != 2)
+        .filter(|(p, c)| {
+            ((ignore_slopes && **c != '#') || (!ignore_slopes && **c == '.'))
+                && direct_successors(p, grid, ignore_slopes).len() != 2
+        })
         .map(|(p, _)| p)
         .collect();
     let mut connections = FxHashMap::default();
     for node in &interesting_nodes {
         let mut conns = vec![];
-        for mut n in direct_successors(&node, grid, ignore_slopes) {
+        'middle: for mut n in direct_successors(&node, grid, ignore_slopes) {
             let mut visited = FxHashSet::default();
             visited.insert(*node);
             while !interesting_nodes.contains(&n) {
                 visited.insert(n);
                 let two_next = direct_successors(&n, grid, ignore_slopes);
                 n = if visited.contains(&two_next[0]) {
+                    if two_next.len() < 2 {
+                        continue 'middle;
+                    }
                     two_next[1]
                 } else {
                     two_next[0]
@@ -101,15 +106,13 @@ fn longest_walk(grid: &Array2D<char>, ignore_slopes: bool) -> usize {
         }
     }
 
-    let longest =
-        longest_path(start, end, BitSet::with_capacity(cap), &neighbours, &costs).unwrap();
-    longest
+    longest_path(start, end, 0, &neighbours, &costs).unwrap()
 }
 
 fn longest_path(
     start: usize,
     end: usize,
-    visited: BitSet,
+    visited: u64,
     neighbours: &Vec<BitSet>,
     costs: &Array2D<usize>,
 ) -> Option<usize> {
@@ -118,11 +121,10 @@ fn longest_path(
     }
     let mut longest = None;
     for next in neighbours[start].iter() {
-        if visited.contains(next) {
+        if (visited & (1 << next)) > 0 {
             continue;
         }
-        let mut next_visited = visited.clone();
-        next_visited.insert(start);
+        let next_visited = visited | (1 << next);
         if let Some(length) = longest_path(next, end, next_visited, neighbours, costs) {
             let new_length = costs[(start, next)] + length;
             if longest == None || longest.unwrap() < new_length {
