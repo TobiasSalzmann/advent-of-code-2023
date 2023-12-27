@@ -1,8 +1,10 @@
 use crate::util::AdventHelper;
 use array2d::Array2D;
+use bit_set::BitSet;
 use itertools::Itertools;
 use pathfinding::prelude::dijkstra;
 use rustc_hash::{FxHashMap, FxHashSet};
+use std::iter;
 
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
@@ -123,15 +125,57 @@ fn simplify(grid: &Array2D<char>) -> FxHashMap<(usize, usize), Vec<((usize, usiz
 fn longest_walk_2(grid: &Array2D<char>) -> usize {
     let start: (usize, usize) = (0, 1);
     let end = (grid.column_len() - 1, grid.row_len() - 2);
-    let map = simplify(grid);
+    let map: FxHashMap<(usize, usize), Vec<((usize, usize), usize)>> = simplify(grid);
 
-    let (path, _): (Vec<(Vec<(usize, usize)>, usize)>, usize) = dijkstra(
-        &(vec![start], 0),
-        |s| successors_2(s, &map, end),
-        |x| *x.0.last().unwrap() == end,
-    )
-    .unwrap();
-    path.last().unwrap().1
+    let to_nodes: FxHashMap<(usize, usize), usize> =
+        map.keys().enumerate().map(|(i, n)| (*n, i)).collect();
+
+    let start = to_nodes[&start];
+    let end = to_nodes[&end];
+    let cap = to_nodes.len();
+    let mut neighbours: Vec<BitSet> = iter::repeat(BitSet::with_capacity(cap))
+        .take(cap)
+        .collect_vec();
+    let mut costs = Array2D::filled_with(0, cap, cap);
+    for (a, bs) in map {
+        for (b, cost) in bs {
+            let a = to_nodes[&a];
+            let b = to_nodes[&b];
+            costs[(a, b)] = cost;
+            neighbours[a].insert(b);
+        }
+    }
+
+    let longest =
+        longest_path(start, end, BitSet::with_capacity(cap), &neighbours, &costs).unwrap();
+    longest
+}
+
+fn longest_path(
+    start: usize,
+    end: usize,
+    visited: BitSet,
+    neighbours: &Vec<BitSet>,
+    costs: &Array2D<usize>,
+) -> Option<usize> {
+    if start == end {
+        return Some(0);
+    }
+    let mut longest = None;
+    for next in neighbours[start].iter() {
+        if visited.contains(next) {
+            continue;
+        }
+        let mut next_visited = visited.clone();
+        next_visited.insert(start);
+        if let Some(length) = longest_path(next, end, next_visited, neighbours, costs) {
+            let new_length = costs[(start, next)] + length;
+            if longest == None || longest.unwrap() < new_length {
+                longest = Some(new_length)
+            }
+        };
+    }
+    longest
 }
 
 fn successors_2(
