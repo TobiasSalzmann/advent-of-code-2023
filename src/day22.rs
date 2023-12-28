@@ -1,6 +1,8 @@
 use crate::util::AdventHelper;
 use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 use std::str::FromStr;
 
 pub fn main() {
@@ -65,13 +67,51 @@ fn count_desintegratable(blocks: &Vec<Block>) -> usize {
 
 fn count_total_falling(blocks: &Vec<Block>) -> usize {
     let n = blocks.len();
-    let (_, _, blocks) = drop(blocks);
+    let mut blocks = blocks.clone();
+    blocks.sort_by_key(|b| b.start.2);
 
-    blocks
-        .into_iter()
-        .combinations(n - 1)
-        .map(|x| drop(&x.into_iter().collect_vec()).0)
-        .sum()
+    let (_, rests_on, blocks) = drop(&blocks);
+
+    let get_below: FxHashMap<usize, FxHashSet<usize>> = rests_on
+        .iter()
+        .into_group_map_by(|(above, _below)| above)
+        .iter()
+        .map(|(k, v)| (**k, v.iter().map(|(_, below)| *below).collect()))
+        .collect();
+    let get_above: FxHashMap<usize, FxHashSet<usize>> = rests_on
+        .iter()
+        .into_group_map_by(|(_above, below)| below)
+        .iter()
+        .map(|(k, v)| (**k, v.iter().map(|(above, _)| *above).collect()))
+        .collect();
+
+    let mut total = 0;
+    for block in 0..n {
+        let mut gone_blocks = FxHashSet::from_iter([block]);
+        let mut possibly_gone = BinaryHeap::new();
+        if let Some(above_blocks) = get_above.get(&block) {
+            for above_block in above_blocks {
+                possibly_gone.push(Reverse(above_block));
+            }
+        }
+        while let Some(Reverse(current)) = possibly_gone.pop() {
+            if gone_blocks.contains(current) {
+                continue;
+            }
+            if let Some(support_set) = get_below.get(current) {
+                if support_set.is_subset(&gone_blocks) {
+                    gone_blocks.insert(*current);
+                    total += 1;
+                    if let Some(above_blocks) = get_above.get(current) {
+                        for above_block in above_blocks {
+                            possibly_gone.push(Reverse(above_block));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    total
 }
 
 fn get_desintegratable(blocks: &Vec<Block>) -> FxHashMap<usize, Vec<usize>> {
