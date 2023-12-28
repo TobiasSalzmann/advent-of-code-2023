@@ -2,6 +2,7 @@ use itertools::{Itertools, Product};
 
 use crate::util::Dir::{Down, Left, Right, Up};
 use array2d::Array2D;
+use bit_set::BitSet;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::iter::Map;
@@ -219,6 +220,55 @@ impl Point {
             max_x,
             min_y,
             max_y,
+        }
+    }
+}
+
+pub struct BitSetGrid {
+    height: usize,
+    width: usize,
+    inner: BitSet,
+}
+
+impl BitSetGrid {
+    pub fn new(height: usize, width: usize) -> BitSetGrid {
+        BitSetGrid {
+            height,
+            width,
+            inner: BitSet::with_capacity(width * height),
+        }
+    }
+
+    pub fn from_hashset<H>(col: &HashSet<Point, H>) -> BitSetGrid {
+        let bounds = Point::bounds(col);
+        let mut grid = BitSetGrid::new(bounds.max_y as usize + 1, bounds.max_x as usize + 1);
+        for p in col {
+            grid.insert(p);
+        }
+        grid
+    }
+
+    pub fn insert(&mut self, point: &Point) -> bool {
+        self.inner
+            .insert((point.y as usize) * self.width + point.x as usize)
+    }
+
+    pub fn remove(&mut self, point: &Point) -> bool {
+        self.inner
+            .remove((point.y as usize) * self.width + point.x as usize)
+    }
+
+    pub fn contains(&self, point: &Point) -> bool {
+        self.inner
+            .contains((point.y as usize) * self.width + point.x as usize)
+    }
+
+    pub fn bounds(&self) -> Bounds {
+        Bounds {
+            min_x: 0,
+            max_x: (self.width - 1) as i32,
+            min_y: 0,
+            max_y: (self.height - 1) as i32,
         }
     }
 }

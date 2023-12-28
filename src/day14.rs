@@ -1,7 +1,7 @@
 use crate::day14::Rock::{Fixed, Round};
-use crate::util::{AdventHelper, Point};
+use crate::util::{AdventHelper, BitSetGrid, Point};
 use itertools::Itertools;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::HashSet;
 
 pub fn main() {
@@ -16,35 +16,51 @@ pub fn main() {
 fn load(grid: &FxHashMap<Point, Rock>, n: i32) -> i32 {
     let mut grid = grid.clone();
 
-    step(&mut grid, Point::up);
-    grid.iter()
+    let fixed_rocks: FxHashSet<Point> = grid
+        .iter()
+        .filter(|(_, rock)| **rock == Fixed)
+        .map(|(p, _)| p)
+        .cloned()
+        .collect();
+
+    let fixed_rocks = BitSetGrid::from_hashset(&fixed_rocks);
+    let mut round_rocks: FxHashSet<Point> = grid
+        .iter()
         .filter(|(_, rock)| **rock == Round)
-        .map(|(p, _)| n - p.y)
-        .sum()
+        .map(|(p, _)| p)
+        .cloned()
+        .collect();
+
+    step(&mut round_rocks, Point::up, true, &fixed_rocks);
+    round_rocks.iter().map(|p| n - p.y).sum()
 }
 
 fn load2(grid: &FxHashMap<Point, Rock>, n: i32, target: i32) -> i32 {
     let mut grid = grid.clone();
     let mut seen: FxHashMap<String, i32> = FxHashMap::default();
     let mut loads: FxHashMap<i32, i32> = FxHashMap::default();
+    let fixed_rocks: FxHashSet<Point> = grid
+        .iter()
+        .filter(|(_, rock)| **rock == Fixed)
+        .map(|(p, _)| p)
+        .cloned()
+        .collect();
+    let fixed_rocks = BitSetGrid::from_hashset(&fixed_rocks);
+    let mut round_rocks: FxHashSet<Point> = grid
+        .iter()
+        .filter(|(_, rock)| **rock == Round)
+        .map(|(p, _)| p)
+        .cloned()
+        .collect();
 
     for i in 1.. {
-        step(&mut grid, Point::up);
-        step(&mut grid, Point::left);
-        step(&mut grid, Point::down);
-        step(&mut grid, Point::right);
+        step(&mut round_rocks, Point::up, true, &fixed_rocks);
+        step(&mut round_rocks, Point::left, false, &fixed_rocks);
+        step(&mut round_rocks, Point::down, true, &fixed_rocks);
+        step(&mut round_rocks, Point::right, false, &fixed_rocks);
 
-        let digest = grid
-            .iter()
-            .filter(|(_, rock)| **rock == Round)
-            .map(|(k, _v)| k)
-            .sorted()
-            .join(",");
-        let load = grid
-            .iter()
-            .filter(|(_, rock)| **rock == Round)
-            .map(|(p, _)| n - p.y)
-            .sum();
+        let digest = round_rocks.iter().sorted().join(",");
+        let load = round_rocks.iter().map(|p| n - p.y).sum();
         if let Some(idx) = seen.get(&digest).cloned() {
             let cycle_length = i - idx;
             let distance_to_target = (target - idx) % cycle_length;
@@ -56,31 +72,31 @@ fn load2(grid: &FxHashMap<Point, Rock>, n: i32, target: i32) -> i32 {
     unreachable!()
 }
 
-fn step(grid: &mut FxHashMap<Point, Rock>, mv: fn(&Point) -> Point) {
-    let col: HashSet<Point> = grid.keys().cloned().collect();
-    let bounds = Point::bounds(&col);
+fn step(
+    mut round_rocks: &mut FxHashSet<Point>,
+    mv: fn(&Point) -> Point,
+    vertical: bool,
+    fixed_rocks: &BitSetGrid,
+) {
+    let bounds = fixed_rocks.bounds();
     let mut changed = 1;
-    let mut round_rock_vec = grid
-        .iter()
-        .filter(|(_, rock)| **rock == Round)
-        .map(|(p, _)| p)
-        .cloned()
-        .collect_vec();
     while changed > 0 {
         changed = 0;
-        for p in &mut round_rock_vec {
-            let mut good = p.clone();
+        for p in round_rocks.clone() {
+            let mut good = p;
             loop {
                 let next = mv(&good);
-                if grid.contains_key(&next) || !bounds.contains(&next) {
+                if fixed_rocks.contains(&next)
+                    || round_rocks.contains(&next)
+                    || !bounds.contains(&next)
+                {
                     break;
                 }
                 good = next;
             }
-            if good != *p {
-                grid.remove(p);
-                grid.insert(good, Round);
-                *p = good;
+            if good != p {
+                round_rocks.remove(&p);
+                round_rocks.insert(good);
                 changed += 1;
             }
         }
