@@ -1,4 +1,4 @@
-use crate::util::AdventHelper;
+use crate::util::{AdventHelper, BitSetGrid};
 use array2d::Array2D;
 use bit_set::BitSet;
 use itertools::Itertools;
@@ -93,16 +93,14 @@ fn longest_walk(grid: &Array2D<char>, ignore_slopes: bool) -> usize {
     let start = to_nodes[&start];
     let end = to_nodes[&end];
     let cap = to_nodes.len();
-    let mut neighbours: Vec<BitSet> = iter::repeat(BitSet::with_capacity(cap))
-        .take(cap)
-        .collect_vec();
+    let mut neighbours: Vec<Vec<usize>> = vec![vec![]; cap];
     let mut costs = Array2D::filled_with(0, cap, cap);
     for (a, bs) in map {
         for (b, cost) in bs {
             let a = to_nodes[&a];
             let b = to_nodes[&b];
             costs[(a, b)] = cost;
-            neighbours[a].insert(b);
+            neighbours[a].push(b);
         }
     }
 
@@ -113,20 +111,20 @@ fn longest_path(
     start: usize,
     end: usize,
     visited: u64,
-    neighbours: &Vec<BitSet>,
+    neighbours: &Vec<Vec<usize>>,
     costs: &Array2D<usize>,
 ) -> Option<usize> {
     if start == end {
         return Some(0);
     }
     let mut longest = None;
-    for next in neighbours[start].iter() {
+    for next in &neighbours[start] {
         if (visited & (1 << next)) > 0 {
             continue;
         }
         let next_visited = visited | (1 << next);
-        if let Some(length) = longest_path(next, end, next_visited, neighbours, costs) {
-            let new_length = costs[(start, next)] + length;
+        if let Some(length) = longest_path(*next, end, next_visited, neighbours, costs) {
+            let new_length = costs[(start, *next)] + length;
             if longest == None || longest.unwrap() < new_length {
                 longest = Some(new_length)
             }
