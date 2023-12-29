@@ -2,9 +2,10 @@ use crate::util::{AdventHelper, BitSetGrid};
 use array2d::Array2D;
 use bit_set::BitSet;
 use itertools::Itertools;
+use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::iter;
 
+const PARALLEL_DEPTH: u32 = 6;
 pub fn main() {
     let advent = AdventHelper::from_file_name(file!());
     let grid = advent.parse_grid_2d();
@@ -117,6 +118,24 @@ fn longest_path(
     if start == end {
         return Some(0);
     }
+
+    if visited.count_ones() <= PARALLEL_DEPTH {
+        return neighbours[start]
+            .par_iter()
+            .filter_map(|next| {
+                if (visited & (1 << next)) > 0 {
+                    return None;
+                }
+                let next_visited = visited | (1 << next);
+                if let Some(length) = longest_path(*next, end, next_visited, neighbours, costs) {
+                    Some(costs[(start, *next)] + length)
+                } else {
+                    None
+                }
+            })
+            .max();
+    }
+
     let mut longest = None;
     for next in &neighbours[start] {
         if (visited & (1 << next)) > 0 {
