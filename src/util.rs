@@ -2,7 +2,7 @@ use itertools::{Itertools, Product};
 
 use crate::util::Dir::{Down, Left, Right, Up};
 use array2d::Array2D;
-use bit_set::BitSet;
+use bit_set::{BitSet, Iter};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::iter::Map;
@@ -228,6 +228,34 @@ pub struct BitSetGrid {
     height: usize,
     width: usize,
     inner: BitSet,
+}
+
+impl<'a> IntoIterator for &'a BitSetGrid {
+    type Item = Point;
+    type IntoIter = BitSetGridIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BitSetGridIter {
+            width: self.width,
+            inner: self.inner.into_iter(),
+        }
+    }
+}
+
+pub struct BitSetGridIter<'a> {
+    width: usize,
+    inner: Iter<'a, u32>,
+}
+
+impl<'a> Iterator for BitSetGridIter<'a> {
+    type Item = Point;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|v| Point {
+            x: (v % self.width) as i32,
+            y: (v / self.width) as i32,
+        })
+    }
 }
 
 impl BitSetGrid {
